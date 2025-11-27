@@ -1,3 +1,4 @@
+// frontend/src/pages/Signup.jsx
 import { useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
@@ -13,7 +14,7 @@ const Signup = () => {
     name: "",
     email: "",
     password: "",
-    role: "student",
+    role: "student", // default role
   });
   const [error, setError] = useState("");
 
@@ -91,7 +92,6 @@ const Signup = () => {
               <option value="student">Student</option>
               <option value="volunteer">Volunteer</option>
               <option value="leader">Community Leader</option>
-              <option value="admin">Admin</option>
             </select>
           </div>
 

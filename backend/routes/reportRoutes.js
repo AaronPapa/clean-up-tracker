@@ -27,6 +27,24 @@ router.post("/", protect, async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
     }
 
+    // ✅ Only allow if:
+    //  - user joined the event, OR
+    //  - user created the event, OR
+    //  - user is admin/leader
+    const isParticipant = event.participants?.some((p) =>
+      p.equals(req.user._id)
+    );
+    const isCreator =
+      String(event.createdBy) === String(req.user._id);
+    const isOfficial =
+      req.user.role === "admin" || req.user.role === "leader";
+
+    if (!isParticipant && !isCreator && !isOfficial) {
+      return res
+        .status(403)
+        .json({ message: "You must join this event before submitting a report." });
+    }
+
     const report = await Report.create({
       event: eventId,
       submittedBy: req.user._id,
@@ -46,6 +64,7 @@ router.post("/", protect, async (req, res) => {
     res.status(500).json({ message: "Failed to create report" });
   }
 });
+
 
 // GET /api/reports
 // List reports (for regular users - currently all)

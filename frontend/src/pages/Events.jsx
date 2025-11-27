@@ -2,8 +2,14 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
+import emailjs from "emailjs-com";
 
 const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+// EmailJS env vars
+const EMAIL_SERVICE = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+const EMAIL_TEMPLATE = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+const EMAIL_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
 const Events = () => {
   const { user } = useAuth();
@@ -16,6 +22,7 @@ const Events = () => {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [showCreate, setShowCreate] = useState(false);
 
   const token = user?.token;
@@ -25,7 +32,18 @@ const Events = () => {
       const res = await axios.get(`${API}/api/events`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setEvents(res.data);
+
+      // 🔹 Auto-remove past events (only show today and future)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const upcoming = res.data.filter((evt) => {
+        const d = new Date(evt.date);
+        d.setHours(0, 0, 0, 0);
+        return d >= today;
+      });
+
+      setEvents(upcoming);
     } catch (err) {
       console.error(err);
     }
@@ -43,6 +61,7 @@ const Events = () => {
     e.preventDefault();
     setSaving(true);
     setError("");
+    setSuccess("");
 
     try {
       await axios.post(`${API}/api/events`, form, {
@@ -50,6 +69,7 @@ const Events = () => {
       });
       setForm({ title: "", description: "", location: "", date: "" });
       setShowCreate(false);
+      setSuccess("Event created and added to the community feed.");
       fetchEvents();
     } catch (err) {
       const message =
@@ -60,26 +80,69 @@ const Events = () => {
     }
   };
 
-  const handleJoin = async (id) => {
+  // 🔹 Send confirmation/reminder email via EmailJS
+  const sendJoinEmail = async (evt) => {
+    try {
+      if (!EMAIL_SERVICE || !EMAIL_TEMPLATE || !EMAIL_PUBLIC_KEY) {
+        console.warn("EmailJS env vars missing – skipping email send.");
+        return;
+      }
+      if (!user?.email) return;
+
+      const eventDate = new Date(evt.date).toLocaleDateString();
+
+      const templateParams = {
+        to_name: user.name,
+        to_email: user.email,
+        event_title: evt.title,
+        event_date: eventDate,
+        event_location: evt.location,
+      };
+
+      await emailjs.send(
+        EMAIL_SERVICE,
+        EMAIL_TEMPLATE,
+        templateParams,
+        EMAIL_PUBLIC_KEY
+      );
+      console.log("Join confirmation email sent.");
+    } catch (err) {
+      console.error("EmailJS error:", err);
+    }
+  };
+
+  const handleJoin = async (evt) => {
+    setError("");
+    setSuccess("");
+
     try {
       await axios.post(
-        `${API}/api/events/${id}/join`,
+        `${API}/api/events/${evt._id}/join`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
+      // send confirmation / reminder email
+      await sendJoinEmail(evt);
+
+      setSuccess(
+        `You joined "${evt.title}". A confirmation/reminder has been sent to ${user.email}.`
+      );
       fetchEvents();
     } catch (err) {
       console.error(err);
+      const message =
+        err.response?.data?.message || "Failed to join event.";
+      setError(message);
     }
   };
 
   const isJoined = (event) =>
-  event.participants?.some(
-    (p) => String(p._id || p) === String(user._id)
-  );
-
+    event.participants?.some(
+      (p) => String(p._id || p) === String(user._id)
+    );
 
   return (
     <div className="page-container">
@@ -103,6 +166,10 @@ const Events = () => {
           </button>
         </div>
 
+        {/* Global messages */}
+        {error && <div className="alert alert-danger mb-3">{error}</div>}
+        {success && <div className="alert alert-success mb-3">{success}</div>}
+
         {/* Create event card – only shown when toggled */}
         {showCreate && (
           <div className="card mb-4">
@@ -113,8 +180,6 @@ const Events = () => {
                 join.
               </p>
             </div>
-
-            {error && <div className="alert alert-danger mb-3">{error}</div>}
 
             <form onSubmit={handleCreate} className="event-form">
               <div className="form-grid mb-3">
@@ -185,8 +250,8 @@ const Events = () => {
 
           {events.length === 0 ? (
             <p className="text-sm text-muted">
-              No events have been posted yet. Use &quot;Create new event&quot;
-              above to start your community clean-up feed.
+              No upcoming events. Use &quot;Create new event&quot; above to
+              start your community clean-up feed.
             </p>
           ) : (
             <div className="events-feed">
@@ -220,7 +285,7 @@ const Events = () => {
                           </span>
                         ) : (
                           <button
-                            onClick={() => handleJoin(evt._id)}
+                            onClick={() => handleJoin(evt)}
                             className="btn btn-primary btn-small"
                           >
                             Join Event

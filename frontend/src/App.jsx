@@ -9,9 +9,11 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";  // analytics page
 import Events from "./pages/Events";
 import Reports from "./pages/Reports";
-import AdminReports from "./pages/AdminReports";
+import AdminReports from "./pages/AdminReports";      // inbox / review
+import Feedback from "./pages/Feedback";
 
 function App() {
   return (
@@ -25,6 +27,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
 
+              {/* Everyone's personal dashboard */}
               <Route
                 path="/dashboard"
                 element={
@@ -53,7 +56,27 @@ function App() {
               />
 
               <Route
+                path="/feedback"
+                element={
+                  <ProtectedRoute>
+                    <Feedback />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* ADMIN ANALYTICS PAGE */}
+              <Route
                 path="/admin"
+                element={
+                  <ProtectedRoute roles={["admin", "leader"]}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* ADMIN INBOX PAGE */}
+              <Route
+                path="/admin-inbox"
                 element={
                   <ProtectedRoute roles={["admin", "leader"]}>
                     <AdminReports />

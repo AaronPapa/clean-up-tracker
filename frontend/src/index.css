@@ -1713,3 +1713,209 @@ a.link:hover {
   background: #f0f4f8;
   border-color: #b8c2d1;
 }
+
+/* Pie chart block on dashboard */
+.pie-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.pie-chart {
+  width: 140px;
+  height: 140px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.pie-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.pie-total {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.pie-label {
+  color: #6b7280;
+}
+
+.pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.pie-legend-item {
+  display: flex;
+  align-items: center;
+}
+
+.pie-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  margin-right: 0.5rem;
+}
+
+.pie-legend-text {
+  color: #4b5563;
+}
+
+/* Single-column layout for admin/leader on Reports page */
+.reports-layout.reports-layout-single {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Make admin report items feel clickable */
+.report-item-clickable {
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.report-item-clickable:hover {
+  background: #f7faf8;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.03);
+}
+
+/* Detail panel styling */
+.report-detail {
+  margin-top: 1rem;
+}
+
+.report-detail-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.report-detail-meta {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.report-detail-breakdown {
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.report-detail-notes-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.25rem;
+}
+
+.report-detail-notes {
+  font-size: 0.9rem;
+}
+
+/* Top KPI cards */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card {
+  padding: 1.1rem 1.3rem;
+}
+
+.kpi-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  margin-bottom: 0.3rem;
+}
+
+.kpi-value {
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.kpi-caption {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Two-column section under KPIs */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+  gap: 1.25rem;
+}
+
+/* Table wrapper */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.admin-table .text-right {
+  text-align: right;
+}
+
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.impact-item {
+  padding: 0.5rem 0;
+}
+
+.impact-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.impact-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.impact-caption {
+  font-size: 0.8rem;
+  color: #6b7280;
+}

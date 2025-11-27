@@ -63,10 +63,19 @@ const Navbar = () => {
                 <NavLink to="/reports" className={linkClass}>
                   Reports
                 </NavLink>
+                <NavLink to="/feedback" className={linkClass}>
+                  Feedback
+                </NavLink>
+
                 {(user.role === "admin" || user.role === "leader") && (
-                  <NavLink to="/admin" className={linkClass}>
-                    Admin
-                  </NavLink>
+                  <>
+                    <NavLink to="/admin" className={linkClass}>
+                      Admin Analytics
+                    </NavLink>
+                    <NavLink to="/admin-inbox" className={linkClass}>
+                      Admin Inbox
+                    </NavLink>
+                  </>
                 )}
               </>
             )}
@@ -98,7 +107,9 @@ const Navbar = () => {
             onClick={() => setMobileOpen((o) => !o)}
             aria-label="Toggle navigation menu"
           >
-            <span className={mobileOpen ? "nav-toggle-bar open" : "nav-toggle-bar"} />
+            <span
+              className={mobileOpen ? "nav-toggle-bar open" : "nav-toggle-bar"}
+            />
           </button>
         </div>
       </div>
@@ -154,14 +165,31 @@ const Navbar = () => {
                 >
                   Reports
                 </NavLink>
+                <NavLink
+                  to="/feedback"
+                  className={linkClass}
+                  onClick={closeMenu}
+                >
+                  Feedback
+                </NavLink>
+
                 {(user.role === "admin" || user.role === "leader") && (
-                  <NavLink
-                    to="/admin"
-                    className={linkClass}
-                    onClick={closeMenu}
-                  >
-                    Admin
-                  </NavLink>
+                  <>
+                    <NavLink
+                      to="/admin"
+                      className={linkClass}
+                      onClick={closeMenu}
+                    >
+                      Admin Analytics
+                    </NavLink>
+                    <NavLink
+                      to="/admin-inbox"
+                      className={linkClass}
+                      onClick={closeMenu}
+                    >
+                      Admin Inbox
+                    </NavLink>
+                  </>
                 )}
               </>
             )}
@@ -186,10 +214,7 @@ const Navbar = () => {
             )}
 
             {user && (
-              <button
-                onClick={handleLogout}
-                className="btn btn-ghost btn-full"
-              >
+              <button onClick={handleLogout} className="btn btn-ghost btn-full">
                 Logout
               </button>
             )}

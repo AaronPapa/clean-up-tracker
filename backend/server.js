@@ -45,6 +45,7 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/events", require("./routes/eventRoutes"));
 app.use("/api/reports", require("./routes/reportRoutes"));
 app.use("/api/stats", require("./routes/statsRoutes"));
+app.use("/api/feedback", require("./routes/feedbackRoutes"));
 
 // Global error handler
 app.use(errorHandler);

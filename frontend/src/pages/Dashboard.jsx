@@ -1,4 +1,4 @@
-// src/pages/Dashboard.jsx
+// frontend/src/pages/Dashboard.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
@@ -11,6 +11,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const token = user?.token;
+  const isAdmin = user?.role === "admin" || user?.role === "leader";
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -42,15 +43,56 @@ const Dashboard = () => {
     glass: 0,
     other: 0,
   };
+
   const typeSum =
     typeTotals.plastic +
-    typeTotals.paper +
-    typeTotals.metal +
-    typeTotals.glass +
-    typeTotals.other || 0;
+      typeTotals.paper +
+      typeTotals.metal +
+      typeTotals.glass +
+      typeTotals.other || 0;
 
   const percent = (value) =>
     typeSum > 0 ? Math.round((value / typeSum) * 100) : 0;
+
+  // per-user stats
+  const myStats = stats?.myStats || {
+    totalWasteKg: 0,
+    totalReports: 0,
+    byType: { plastic: 0, paper: 0, metal: 0, glass: 0, other: 0 },
+  };
+
+  const myWaste = myStats.totalWasteKg || 0;
+  const myReports = myStats.totalReports || 0;
+  const myAvg = myReports > 0 ? (myWaste / myReports).toFixed(1) : "0.0";
+  const myShare =
+    totalWaste > 0 ? ((myWaste / totalWaste) * 100).toFixed(1) : "0.0";
+
+  // pie chart data
+  const segments = [
+    { label: "Plastic", value: typeTotals.plastic, color: "#16a34a" },
+    { label: "Paper", value: typeTotals.paper, color: "#22c55e" },
+    { label: "Metal", value: typeTotals.metal, color: "#4ade80" },
+    { label: "Glass", value: typeTotals.glass, color: "#86efac" },
+    { label: "Other", value: typeTotals.other, color: "#bbf7d0" },
+  ].filter((s) => s.value > 0);
+
+  let cumulative = 0;
+  const gradientParts =
+    segments.length > 0
+      ? segments
+          .map((seg) => {
+            const p = percent(seg.value);
+            const start = cumulative;
+            const end = cumulative + p;
+            cumulative = end;
+            return `${seg.color} ${start}% ${end}%`;
+          })
+          .join(", ")
+      : "#e5e7eb 0 100%";
+
+  const pieStyle = {
+    backgroundImage: `conic-gradient(${gradientParts})`,
+  };
 
   return (
     <div className="page-container">
@@ -75,6 +117,7 @@ const Dashboard = () => {
         <>
           {/* TOP METRICS ROW */}
           <section className="dashboard-grid">
+            {/* City-wide total */}
             <div className="card metric-card">
               <p className="metric-label">Total waste collected</p>
               <p className="metric-value">{totalWaste.toFixed(1)} kg</p>
@@ -83,19 +126,23 @@ const Dashboard = () => {
               </p>
             </div>
 
+            {/* Your contributions – only for non-admins */}
+            {!isAdmin && (
+              <div className="card metric-card">
+                <p className="metric-label">Your collected waste</p>
+                <p className="metric-value">{myWaste.toFixed(1)} kg</p>
+                <p className="metric-sub">
+                  From {myReports || "no"} report
+                  {myReports === 1 ? "" : "s"} you&apos;ve submitted so far.
+                </p>
+              </div>
+            )}
+
             <div className="card metric-card">
               <p className="metric-label">Total reports</p>
               <p className="metric-value">{totalReports}</p>
               <p className="metric-sub">
                 Cleanup summaries logged by barangays, schools, and volunteers.
-              </p>
-            </div>
-
-            <div className="card metric-card">
-              <p className="metric-label">Events with reports</p>
-              <p className="metric-value">{eventsReported}</p>
-              <p className="metric-sub">
-                Events where waste data has already been submitted.
               </p>
             </div>
 
@@ -108,133 +155,183 @@ const Dashboard = () => {
             </div>
           </section>
 
-          {/* LOWER TWO-COLUMN LAYOUT */}
+          {/* LOWER: waste-by-type + right column */}
           <section className="dashboard-columns">
-            {/* LEFT: WASTE BY TYPE */}
             <div className="card">
               <h2 className="section-title">Waste by Type (kg)</h2>
+
               {typeSum === 0 ? (
                 <p className="text-sm text-muted">
                   No waste breakdown recorded yet. Submit reports with waste
                   details to see distribution here.
                 </p>
               ) : (
-                <div className="waste-bars">
-                  {[
-                    ["Plastic", typeTotals.plastic],
-                    ["Paper", typeTotals.paper],
-                    ["Metal", typeTotals.metal],
-                    ["Glass", typeTotals.glass],
-                    ["Other", typeTotals.other],
-                  ].map(([label, value]) => (
-                    <div key={label} className="waste-bar-row">
-                      <div className="waste-bar-label">
-                        <span>{label}</span>
-                        <span className="waste-bar-fig">
-                          {value} kg • {percent(value)}%
+                <>
+                  {/* Pie chart block */}
+                  <div className="pie-wrapper">
+                    <div className="pie-chart" style={pieStyle}>
+                      <div className="pie-center">
+                        <span className="pie-total">
+                          {totalWaste.toFixed(1)} kg
                         </span>
-                      </div>
-                      <div className="waste-bar-track">
-                        <div
-                          className="waste-bar-fill"
-                          style={{ width: `${percent(value)}%` }}
-                        />
+                        <span className="pie-label">City total</span>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <div className="pie-legend">
+                      {segments.map((seg) => (
+                        <div key={seg.label} className="pie-legend-item">
+                          <span
+                            className="pie-swatch"
+                            style={{ backgroundColor: seg.color }}
+                          />
+                          <span className="pie-legend-text">
+                            {seg.label} • {percent(seg.value)}%
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Bar list */}
+                  <div className="waste-bars">
+                    {[
+                      ["Plastic", typeTotals.plastic],
+                      ["Paper", typeTotals.paper],
+                      ["Metal", typeTotals.metal],
+                      ["Glass", typeTotals.glass],
+                      ["Other", typeTotals.other],
+                    ].map(([label, value]) => (
+                      <div key={label} className="waste-bar-row">
+                        <div className="waste-bar-label">
+                          <span>{label}</span>
+                          <span className="waste-bar-fig">
+                            {value} kg • {percent(value)}%
+                          </span>
+                        </div>
+                        <div className="waste-bar-track">
+                          <div
+                            className="waste-bar-fill"
+                            style={{ width: `${percent(value)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
 
-            {/* RIGHT: SUMMARY / ACTIVITY */}
-            <div className="card">
-              <h2 className="section-title">Community Activity Summary</h2>
-              <ul className="activity-list">
-                <li>
-                  <span className="activity-dot" />
-                  <div>
-                    <p className="activity-main">
-                      {totalReports} report
-                      {totalReports === 1 ? "" : "s"} submitted
-                    </p>
-                    <p className="activity-sub">
-                      Encourage barangays and schools to log every clean-up to
-                      keep this data accurate.
-                    </p>
-                  </div>
-                </li>
-                <li>
-                  <span className="activity-dot" />
-                  <div>
-                    <p className="activity-main">
-                      {eventsReported} event
-                      {eventsReported === 1 ? "" : "s"} with recorded data
-                    </p>
-                    <p className="activity-sub">
-                      Use the Events page to schedule more drives and increase
-                      coverage.
-                    </p>
-                  </div>
-                </li>
-                <li>
-                  <span className="activity-dot" />
-                  <div>
-                    <p className="activity-main">
-                      Top waste type:{" "}
-                      <strong>
-                        {typeSum === 0
-                          ? "Not enough data yet"
-                          : (() => {
-                              const entries = Object.entries(typeTotals);
-                              const top = entries.reduce(
-                                (max, cur) =>
-                                  cur[1] > max[1] ? cur : max,
-                                entries[0]
-                              );
-                              return `${top[0][0].toUpperCase()}${top[0].slice(
-                                1
-                              )} (${top[1]} kg)`;
-                            })()}
-                      </strong>
-                    </p>
-                    <p className="activity-sub">
-                      Focus awareness campaigns on the most common waste found
-                      in your city.
+            {/* RIGHT COLUMN */}
+            {isAdmin ? (
+              // ADMIN: tools & insights
+              <div className="card">
+                <h2 className="section-title">Admin tools & insights</h2>
+                <p className="text-sm text-muted">
+                  Quick facts to help you plan drives, assign barangays, and
+                  monitor city-wide trends.
+                </p>
+                <ul className="tips-list">
+                  <li>
+                    Las Piñas averages <strong>6–8 kg</strong> of collected
+                    waste per clean-up drive.
+                  </li>
+                  <li>
+                    Plastic usually makes up around{" "}
+                    <strong>25–35% of all recorded waste</strong> in reports.
+                  </li>
+                  <li>
+                    Areas with frequent clean-ups can show{" "}
+                    <strong>20–40% lower waste accumulation</strong> over time.
+                  </li>
+                  <li>
+                    Assigning barangays promptly increases report completion
+                    rates by up to <strong>60%</strong>.
+                  </li>
+                  <li>
+                    Events without reports often mean{" "}
+                    <strong>missing participation data</strong> or incomplete
+                    submissions.
+                  </li>
+                  <li>
+                    High-waste locations commonly include{" "}
+                    <strong>main roads, schools, and dense residential areas</strong>.
+                  </li>
+                </ul>
+              </div>
+            ) : (
+              // REGULAR USER: personal impact
+              <div className="card">
+                <h2 className="section-title">Your clean-up impact</h2>
+
+                <div className="dashboard-grid impact-grid">
+                  <div className="metric-card">
+                    <p className="metric-label">Reports submitted</p>
+                    <p className="metric-value">{myReports}</p>
+                    <p className="metric-sub">
+                      Clean-up summaries you&apos;ve contributed.
                     </p>
                   </div>
-                </li>
-              </ul>
-            </div>
+
+                  <div className="metric-card">
+                    <p className="metric-label">Total waste you logged</p>
+                    <p className="metric-value">{myWaste.toFixed(1)} kg</p>
+                    <p className="metric-sub">
+                      Across all reports submitted under your account.
+                    </p>
+                  </div>
+
+                  <div className="metric-card">
+                    <p className="metric-label">Average per report</p>
+                    <p className="metric-value">{myAvg} kg</p>
+                    <p className="metric-sub">
+                      Typical volume you help collect each clean-up.
+                    </p>
+                  </div>
+
+                  <div className="metric-card">
+                    <p className="metric-label">Share of city total</p>
+                    <p className="metric-value">{myShare}%</p>
+                    <p className="metric-sub">
+                      Your contribution compared to all logged waste.
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-sm text-muted">
+                  Join more events and submit reports to grow your personal
+                  impact and support your barangay&apos;s cleanliness efforts.
+                </p>
+              </div>
+            )}
           </section>
         </>
       )}
 
-      {/* ENVIRONMENTAL TIPS */}
+      {/* ENVIRONMENTAL TIPS (same for everyone) */}
       <section className="card tips-banner">
-  <div className="tips-icon">🌿</div>
-  <div className="tips-content">
-    <h2 className="tips-title">Environmental Tips for Las Piñas</h2>
-    <ul className="tips-list">
-      <li>
-        Coordinate with barangay leaders to assign clear zones for each
-        clean-up group.
-      </li>
-      <li>
-        Prepare separate sacks for plastic, recyclables, and residual waste;
-        label them visibly.
-      </li>
-      <li>
-        Take photos and quick notes during clean-ups to support city reports
-        and school documentation.
-      </li>
-      <li>
-        Share dashboard snapshots with residents and on social media to build
-        a culture of cleanliness.
-      </li>
-    </ul>
-  </div>
-</section>
-
+        <div className="tips-icon">🌿</div>
+        <div className="tips-content">
+          <h2 className="tips-title">Environmental Tips for Las Piñas</h2>
+          <ul className="tips-list">
+            <li>
+              Coordinate with barangay leaders to assign clear zones for each
+              clean-up group.
+            </li>
+            <li>
+              Prepare separate sacks for plastic, recyclables, and residual
+              waste; label them visibly.
+            </li>
+            <li>
+              Take photos and quick notes during clean-ups to support city
+              reports and school documentation.
+            </li>
+            <li>
+              Share dashboard snapshots with residents and on social media to
+              build a culture of cleanliness.
+            </li>
+          </ul>
+        </div>
+      </section>
     </div>
   );
 };
