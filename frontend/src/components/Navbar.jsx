@@ -38,11 +38,6 @@ const Navbar = () => {
               {user.role === "admin" && (
                 <span className="nav-role-badge nav-role-admin">Admin</span>
               )}
-              {user.role === "leader" && (
-                <span className="nav-role-badge nav-role-leader">
-                  Barangay Leader
-                </span>
-              )}
             </span>
           )}
 
@@ -67,7 +62,7 @@ const Navbar = () => {
                   Feedback
                 </NavLink>
 
-                {(user.role === "admin" || user.role === "leader") && (
+                {(user.role === "admin") && (
                   <>
                     <NavLink to="/admin" className={linkClass}>
                       Admin Analytics
@@ -125,9 +120,7 @@ const Navbar = () => {
               <span className="mobile-user-role">
                 {user.role === "admin"
                   ? "Admin"
-                  : user.role === "leader"
-                  ? "Barangay Leader"
-                  : "Volunteer / Student"}
+                  : "Volunteer / Student/Community Leader"}
               </span>
             </div>
           )}
@@ -173,7 +166,7 @@ const Navbar = () => {
                   Feedback
                 </NavLink>
 
-                {(user.role === "admin" || user.role === "leader") && (
+                {(user.role === "admin") && (
                   <>
                     <NavLink
                       to="/admin"

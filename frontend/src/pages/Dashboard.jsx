@@ -11,7 +11,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const token = user?.token;
-  const isAdmin = user?.role === "admin" || user?.role === "leader";
+  const isAdmin = user?.role === "admin";
 
   useEffect(() => {
     const fetchStats = async () => {

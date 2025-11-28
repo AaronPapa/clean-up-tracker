@@ -37,7 +37,7 @@ router.post("/", protect, async (req, res) => {
     const isCreator =
       String(event.createdBy) === String(req.user._id);
     const isOfficial =
-      req.user.role === "admin" || req.user.role === "leader";
+      req.user.role === "admin";
 
     if (!isParticipant && !isCreator && !isOfficial) {
       return res

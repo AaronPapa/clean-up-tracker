@@ -8,7 +8,7 @@ const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const Feedback = () => {
   const { user } = useAuth();
   const token = user?.token;
-  const isOfficial = user?.role === "admin" || user?.role === "leader";
+  const isOfficial = user?.role === "admin";
 
   const [events, setEvents] = useState([]);
   const [feedbackList, setFeedbackList] = useState([]);

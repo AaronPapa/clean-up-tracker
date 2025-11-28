@@ -39,7 +39,7 @@ router.post("/", protect, async (req, res) => {
 router.get("/", protect, async (req, res) => {
   try {
     const isOfficial =
-      req.user.role === "admin" || req.user.role === "leader";
+      req.user.role === "admin";
 
     const query = isOfficial ? {} : { user: req.user._id };
 
