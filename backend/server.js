@@ -6,12 +6,14 @@ const morgan = require("morgan");
 const connectDB = require("./config/db");
 const { errorHandler } = require("./middleware/errorMiddleware");
 
+
 dotenv.config();
 
 // connect to MongoDB
 connectDB();
 
 const app = express();
+
 
 // CORS: allow frontend URL from env, fallback to localhost for dev
 const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:5173";

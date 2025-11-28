@@ -1,3 +1,4 @@
+// frontend/src/pages/Feedback.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
@@ -15,8 +16,9 @@ const Feedback = () => {
   const [replyText, setReplyText] = useState("");
   const [savingReply, setSavingReply] = useState(false);
 
+  // form state (values match schema enum)
   const [form, setForm] = useState({
-    category: "Suggestion",
+    category: "suggestion",
     eventId: "",
     message: "",
   });
@@ -58,15 +60,15 @@ const Feedback = () => {
       await axios.post(
         `${API}/api/feedback`,
         {
-          category: form.category,
-          eventId: form.eventId || null,
+          category: form.category, // matches enum
+          relatedEvent: form.eventId || null, // backend expects relatedEvent
           message: form.message,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       // reset form
-      setForm({ category: "Suggestion", eventId: "", message: "" });
+      setForm({ category: "suggestion", eventId: "", message: "" });
 
       // reload list so user sees their new feedback
       const res = await axios.get(`${API}/api/feedback`, {
@@ -167,7 +169,7 @@ const Feedback = () => {
                     </span>
                   </div>
                   <p className="feedback-item-title">
-                    {fb.event?.title || "General feedback"}
+                    {fb.relatedEvent?.title || "General feedback"}
                   </p>
                   <p className="feedback-item-meta">
                     From {fb.user?.name || "Unknown"} ·{" "}
@@ -197,11 +199,12 @@ const Feedback = () => {
               <p className="text-sm mb-2">
                 Category: <strong>{selected.category}</strong>
               </p>
-              {selected.event && (
+              {selected.relatedEvent && (
                 <p className="text-sm mb-2">
                   Related event:{" "}
-                  <strong>{selected.event.title}</strong>{" "}
-                  {selected.event.location && `(${selected.event.location})`}
+                  <strong>{selected.relatedEvent.title}</strong>{" "}
+                  {selected.relatedEvent.location &&
+                    `(${selected.relatedEvent.location})`}
                 </p>
               )}
 
@@ -269,10 +272,10 @@ const Feedback = () => {
               value={form.category}
               onChange={handleChange}
             >
-              <option>Suggestion</option>
-              <option>Issue / Problem</option>
-              <option>Question</option>
-              <option>Other</option>
+              <option value="suggestion">Suggestion</option>
+              <option value="issue">Issue / Problem</option>
+              <option value="question">Question</option>
+              <option value="other">Other</option>
             </select>
           </div>
 
@@ -343,7 +346,7 @@ const Feedback = () => {
                 </span>
               </div>
               <p className="feedback-item-title">
-                {fb.event?.title || "General feedback"}
+                {fb.relatedEvent?.title || "General feedback"}
               </p>
               <p className="feedback-item-meta">
                 {new Date(fb.createdAt).toLocaleString()}

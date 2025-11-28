@@ -5,11 +5,13 @@ const { protect, authorize } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// POST /api/feedback
-// Regular user submits feedback
+/**
+ * POST /api/feedback
+ * Regular user submits feedback
+ */
 router.post("/", protect, async (req, res) => {
   try {
-    const { category, message, eventId } = req.body;
+    const { category, message, relatedEvent } = req.body;
 
     if (!message || !message.trim()) {
       return res.status(400).json({ message: "Feedback message is required" });
@@ -19,7 +21,7 @@ router.post("/", protect, async (req, res) => {
       user: req.user._id,
       category: category || "suggestion",
       message: message.trim(),
-      relatedEvent: eventId || null,
+      relatedEvent: relatedEvent || null,
     });
 
     res.status(201).json(feedback);
@@ -29,8 +31,35 @@ router.post("/", protect, async (req, res) => {
   }
 });
 
-// GET /api/feedback/admin
-// Admin / leader view all feedback
+/**
+ * GET /api/feedback
+ * - Regular users: only their own feedback
+ * - Admin/leader: all feedback
+ */
+router.get("/", protect, async (req, res) => {
+  try {
+    const isOfficial =
+      req.user.role === "admin" || req.user.role === "leader";
+
+    const query = isOfficial ? {} : { user: req.user._id };
+
+    const feedbacks = await Feedback.find(query)
+      .populate("user", "name email role")
+      .populate("relatedEvent", "title date location")
+      .sort({ createdAt: -1 });
+
+    res.json(feedbacks);
+  } catch (err) {
+    console.error("GET FEEDBACK ERROR:", err);
+    res.status(500).json({ message: "Failed to load feedback" });
+  }
+});
+
+/**
+ * GET /api/feedback/admin
+ * (Optional explicit admin route, keeps your other code working
+ *  if you ever call /api/feedback/admin directly.)
+ */
 router.get(
   "/admin",
   protect,
@@ -39,7 +68,7 @@ router.get(
     try {
       const feedbacks = await Feedback.find()
         .populate("user", "name email role")
-        .populate("relatedEvent", "title date")
+        .populate("relatedEvent", "title date location")
         .sort({ createdAt: -1 });
 
       res.json(feedbacks);
@@ -50,8 +79,10 @@ router.get(
   }
 );
 
-// PATCH /api/feedback/:id/status
-// Update status: new / in_review / resolved
+/**
+ * PATCH /api/feedback/:id/status
+ * Update status: new / in_review / resolved
+ */
 router.patch(
   "/:id/status",
   protect,
@@ -73,12 +104,49 @@ router.patch(
 
       const populated = await Feedback.findById(fb._id)
         .populate("user", "name email role")
-        .populate("relatedEvent", "title date");
+        .populate("relatedEvent", "title date location");
 
       res.json(populated);
     } catch (err) {
       console.error("UPDATE FEEDBACK STATUS ERROR:", err);
       res.status(500).json({ message: "Failed to update feedback status" });
+    }
+  }
+);
+
+/**
+ * PATCH /api/feedback/:id/reply
+ * Save an admin/leader reply to a feedback item
+ */
+router.patch(
+  "/:id/reply",
+  protect,
+  authorize("admin", "leader"),
+  async (req, res) => {
+    try {
+      const { adminReply } = req.body;
+
+      const fb = await Feedback.findById(req.params.id);
+      if (!fb) {
+        return res.status(404).json({ message: "Feedback not found" });
+      }
+
+      fb.adminReply = adminReply || "";
+      // optionally auto-move status when replying
+      if (adminReply && fb.status === "new") {
+        fb.status = "in_review";
+      }
+
+      await fb.save();
+
+      const populated = await Feedback.findById(fb._id)
+        .populate("user", "name email role")
+        .populate("relatedEvent", "title date location");
+
+      res.json(populated);
+    } catch (err) {
+      console.error("UPDATE FEEDBACK REPLY ERROR:", err);
+      res.status(500).json({ message: "Failed to save reply" });
     }
   }
 );

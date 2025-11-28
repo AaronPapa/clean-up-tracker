@@ -13,9 +13,8 @@ const Home = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await axios.get(`${API}/api/stats`, {
-          headers: { Authorization: `Bearer ${user?.token}` },
-        });
+        // 🔓 Public endpoint – no token needed
+        const res = await axios.get(`${API}/api/stats/public`);
         setStats(res.data);
       } catch (err) {
         console.error("Home stats error:", err);
@@ -23,8 +22,8 @@ const Home = () => {
       }
     };
 
-    if (user?.token) fetchStats();
-  }, [user]);
+    fetchStats();
+  }, []); // no dependency on user
 
   const totalWaste = stats?.totalWasteKg ?? 0;
   const totalReports = stats?.totalReports ?? 0;

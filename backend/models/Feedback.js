@@ -27,6 +27,12 @@ const feedbackSchema = new mongoose.Schema(
       enum: ["new", "in_review", "resolved"],
       default: "new",
     },
+    // 🔧 NEW: for admin replies
+    adminReply: {
+      type: String,
+      default: "",
+      trim: true,
+    },
   },
   { timestamps: true }
 );
